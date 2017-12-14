@@ -34,7 +34,17 @@ services:
     ports:
       - "9000:9000"
     volumes:
-        - "./www:/usr/share/nginx/html"
+      - "./www:/usr/share/nginx/html"
+
+  db:
+    image: mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: admin
+      MYSQL_DATABASE: db_name
+      MYSQL_USER: db_user
+      MYSQL_PASSWORD: db_pass
+    ports:
+      - "3306:3306"
 
   elk:
     image: willdurand/elk
