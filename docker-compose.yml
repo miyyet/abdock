@@ -17,10 +17,8 @@ services:
     restart: always
     depends_on:
       - php
-#      - db
 
   php:
-#    image: php:7.1-fpm
     build:
       context: ./sys/config/php
       args:
@@ -38,12 +36,13 @@ services:
     volumes:
         - "./www:/usr/share/nginx/html"
 
-#  db:
-#
-#  reverse-proxy:
-#
-#  redis:
-#
-#  mail:
-#
-#  log:
+  elk:
+    image: willdurand/elk
+    ports:
+      - 8001:80
+    volumes:
+      - ./sys/config/elk/logstash:/etc/logstash
+      - ./sys/config/elk/logstash/patterns:/opt/logstash/patterns
+    volumes_from:
+      - php
+      - web
