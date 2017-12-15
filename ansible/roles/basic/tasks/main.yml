@@ -1,0 +1,5 @@
+- name: "Installing softwars"
+  apt: pkg={{ item }} state=present
+  with_items:
+    - vim
+    - git

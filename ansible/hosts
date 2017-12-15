@@ -1,0 +1,7 @@
+[local]
+ubuntu1 ansible_connection=docker ansible_host=ubuntu1
+
+[docker]
+ubuntu2 ansible_connection=docker ansible_host=ubuntu2
+
+

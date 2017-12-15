@@ -17,8 +17,10 @@ services:
     restart: always
     depends_on:
       - php
+      - db
 
   php:
+    container_name: php
     build:
       context: ./sys/config/php
       args:
@@ -30,7 +32,6 @@ services:
         - INSTALL_MEMCACHED=false
         - INSTALL_EXIF=true
         - INSTALL_PHPREDIS=true
-    container_name: php
     ports:
       - "9000:9000"
     volumes:
@@ -38,15 +39,19 @@ services:
 
   db:
     image: mariadb
+    container_name: db
     environment:
       MYSQL_ROOT_PASSWORD: admin
       MYSQL_DATABASE: db_name
       MYSQL_USER: db_user
       MYSQL_PASSWORD: db_pass
     ports:
-      - "3306:3306"
+      - "3307:3306"
+    volumes:
+      - "./sys/var/data/db:/var/lib/mysql"
 
   elk:
+    container_name: elk
     image: willdurand/elk
     ports:
       - 8001:80
@@ -56,3 +61,29 @@ services:
     volumes_from:
       - php
       - web
+
+#  jenkins:
+#    image: jenkins/jenkins:lts
+#    container_name: jenkins
+##    environment:
+#    ports:
+#      - "8080:8080"
+#      - "50000:50000"
+##    volumes:
+##      - "./sys/var/data/db:/var/lib/mysql"
+
+  ubuntu1:
+    build:
+      context: .
+    container_name: ubuntu1
+    command: /bin/bash -c "tail -f /dev/null"
+    volumes:
+      - "./sources.list:/etc/apt/sources.list"
+
+  ubuntu2:
+    build:
+      context: .
+    container_name: ubuntu2
+    command: /bin/bash -c "tail -f /dev/null"
+    volumes:
+      - "./sources.list:/etc/apt/sources.list"
