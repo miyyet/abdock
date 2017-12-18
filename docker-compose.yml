@@ -10,14 +10,15 @@ services:
       - "./www:/usr/share/nginx/html"
       - "./sys/var/log/:/var/log/nginx/"
     ports:
-      - "8000:80"
+      - "8001:80"
     environment:
       - NGINX_HOST=${NGINX_HOST}
     command: /bin/bash -c "envsubst '$$NGINX_HOST' < /etc/nginx/sites-available/default > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
     restart: always
+    links:
+      - php
     depends_on:
       - php
-      - db
 
   php:
     container_name: php
@@ -36,6 +37,10 @@ services:
       - "9000:9000"
     volumes:
       - "./www:/usr/share/nginx/html"
+    links:
+      - db
+    depends_on:
+      - db
 
   db:
     image: mariadb
@@ -50,17 +55,31 @@ services:
     volumes:
       - "./sys/var/data/db:/var/lib/mysql"
 
-  elk:
-    container_name: elk
-    image: willdurand/elk
-    ports:
-      - 8001:80
+  varnish:
+    container_name: varnish
+    image: million12/varnish
+    links:
+      - web:web
     volumes:
-      - ./sys/config/elk/logstash:/etc/logstash
-      - ./sys/config/elk/logstash/patterns:/opt/logstash/patterns
-    volumes_from:
-      - php
+      - "./sys/config/varnish/default.vcl:/etc/varnish/default.vcl"
+    ports:
+      - 8000:80
+    links:
       - web
+    depends_on:
+      - web
+
+#  elk:
+#    container_name: elk
+#    image: willdurand/elk
+#    ports:
+#      - 8001:80
+#    volumes:
+#      - ./sys/config/elk/logstash:/etc/logstash
+#      - ./sys/config/elk/logstash/patterns:/opt/logstash/patterns
+#    volumes_from:
+#      - php
+#      - web
 
 #  jenkins:
 #    image: jenkins/jenkins:lts
@@ -72,18 +91,18 @@ services:
 ##    volumes:
 ##      - "./sys/var/data/db:/var/lib/mysql"
 
-  ubuntu1:
-    build:
-      context: .
-    container_name: ubuntu1
-    command: /bin/bash -c "tail -f /dev/null"
-    volumes:
-      - "./sources.list:/etc/apt/sources.list"
-
-  ubuntu2:
-    build:
-      context: .
-    container_name: ubuntu2
-    command: /bin/bash -c "tail -f /dev/null"
-    volumes:
-      - "./sources.list:/etc/apt/sources.list"
+#  ubuntu1:
+#    build:
+#      context: .
+#    container_name: ubuntu1
+#    command: /bin/bash -c "tail -f /dev/null"
+#    volumes:
+#      - "./sources.list:/etc/apt/sources.list"
+#
+#  ubuntu2:
+#    build:
+#      context: .
+#    container_name: ubuntu2
+#    command: /bin/bash -c "tail -f /dev/null"
+#    volumes:
+#      - "./sources.list:/etc/apt/sources.list"
