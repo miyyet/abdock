@@ -3,3 +3,4 @@
 .idea
 .env
 sys/var/log/*
+sys/var/data/*

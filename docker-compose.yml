@@ -25,35 +25,59 @@ services:
     build:
       context: ./sys/config/php
       args:
-        - INSTALL_XDEBUG=true
-        - INSTALL_INTL=true
-        - INSTALL_IMAGE_OPTIMIZERS=true
-        - INSTALL_IMAGEMAGICK=true
-        - INSTALL_OPCACHE=true
-        - INSTALL_MEMCACHED=false
-        - INSTALL_EXIF=true
-        - INSTALL_PHPREDIS=true
+        - INSTALL_XDEBUG=${INSTALL_XDEBUG}
+        - INSTALL_INTL=${INSTALL_INTL}
+        - INSTALL_IMAGE_OPTIMIZERS=${INSTALL_IMAGE_OPTIMIZERS}
+        - INSTALL_IMAGEMAGICK=${INSTALL_IMAGEMAGICK}
+        - INSTALL_OPCACHE=${INSTALL_OPCACHE}
+        - INSTALL_MEMCACHED=${INSTALL_MEMCACHED}
+        - INSTALL_EXIF=${INSTALL_EXIF}
+        - INSTALL_PHPREDIS=${INSTALL_PHPREDIS}
     ports:
       - "9000:9000"
     volumes:
       - "./www:/usr/share/nginx/html"
     links:
       - db
+      - mail
     depends_on:
       - db
+      - mail
 
   db:
     image: mariadb
     container_name: db
     environment:
-      MYSQL_ROOT_PASSWORD: admin
-      MYSQL_DATABASE: db_name
-      MYSQL_USER: db_user
-      MYSQL_PASSWORD: db_pass
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:
       - "3307:3306"
     volumes:
       - "./sys/var/data/db:/var/lib/mysql"
+
+  phpmyadmin:
+    container_name: phpmyadmin
+    image: phpmyadmin/phpmyadmin
+    restart: always
+    links:
+      - db
+    ports:
+      - 8183:80
+    environment:
+      PMA_ARBITRARY: 1
+      MYSQL_USER: root
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+
+  mail:
+    container_name: mail
+    image: mailhog/mailhog
+    restart: always
+    ports:
+      - 1025:1025
+      - 8025:8025
 
   varnish:
     container_name: varnish
@@ -69,17 +93,17 @@ services:
     depends_on:
       - web
 
-#  elk:
-#    container_name: elk
-#    image: willdurand/elk
-#    ports:
-#      - 8001:80
-#    volumes:
-#      - ./sys/config/elk/logstash:/etc/logstash
-#      - ./sys/config/elk/logstash/patterns:/opt/logstash/patterns
-#    volumes_from:
-#      - php
-#      - web
+  elk:
+    container_name: elk
+    image: willdurand/elk
+    ports:
+      - 8002:80
+    volumes:
+      - ./sys/config/elk/logstash:/etc/logstash
+      - ./sys/config/elk/logstash/patterns:/opt/logstash/patterns
+    volumes_from:
+      - php
+      - web
 
 #  jenkins:
 #    image: jenkins/jenkins:lts
@@ -90,19 +114,3 @@ services:
 #      - "50000:50000"
 ##    volumes:
 ##      - "./sys/var/data/db:/var/lib/mysql"
-
-#  ubuntu1:
-#    build:
-#      context: .
-#    container_name: ubuntu1
-#    command: /bin/bash -c "tail -f /dev/null"
-#    volumes:
-#      - "./sources.list:/etc/apt/sources.list"
-#
-#  ubuntu2:
-#    build:
-#      context: .
-#    container_name: ubuntu2
-#    command: /bin/bash -c "tail -f /dev/null"
-#    volumes:
-#      - "./sources.list:/etc/apt/sources.list"

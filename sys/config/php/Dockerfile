@@ -114,6 +114,18 @@ RUN if [ ${INSTALL_PHPREDIS} = true ]; then \
     &&  docker-php-ext-enable redis \
 ;fi
 
+#####################################
+# Postfix:
+#####################################
+USER root
+
+RUN apt-get update  -yqq
+RUN echo postfix postfix/mailname string localhost | debconf-set-selections;
+RUN echo postfix postfix/main_mailer_type string 'Internet Site' | debconf-set-selections;
+RUN apt-get install -y postfix
+
+COPY ./main.cf /etc/postfix/main.cf
+RUN /etc/init.d/postfix restart
 
 #
 #--------------------------------------------------------------------------
